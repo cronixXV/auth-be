@@ -33,6 +33,17 @@ services:
       timeout: 5s
       retries: 5
 
+  pgadmin:
+    container_name: auth-pgadmin
+    image: dpage/pgadmin4
+    restart: always
+    env_file:
+    - .env
+    ports:
+    - "8080:80"
+    depends_on:
+    - db
+
 volumes:
   postgres_data:
 
