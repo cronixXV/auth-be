@@ -1,7 +1,7 @@
 import { User } from "../../models/user";
-import { hashPassword } from "../../utils/hash";
+import { hashPassword, comparePassword } from "../../utils/hash";
 import { signAccessToken, signRefreshToken } from "../../utils/jwt";
-import { RegisterDto } from "./auth.schemas";
+import { RegisterDto, LoginDto } from "./auth.schemas";
 
 export class AuthService {
   static async register(dto: RegisterDto) {
@@ -22,6 +22,38 @@ export class AuthService {
       role: "USER",
       tokenVersion: 0,
     });
+
+    const payload = {
+      userId: user.id,
+      role: user.role,
+      tokenVersion: user.tokenVersion,
+    };
+
+    const accessToken = signAccessToken(payload);
+    const refreshToken = signRefreshToken(payload);
+
+    return {
+      user,
+      accessToken,
+      refreshToken,
+    };
+  }
+
+  // ✅ ДОБАВЛЯЕМ СЮДА
+  static async login(dto: LoginDto) {
+    const user = await User.findOne({
+      where: { email: dto.email },
+    });
+
+    if (!user) {
+      throw new Error("INVALID_CREDENTIALS");
+    }
+
+    const isValid = await comparePassword(dto.password, user.passwordHash);
+
+    if (!isValid) {
+      throw new Error("INVALID_CREDENTIALS");
+    }
 
     const payload = {
       userId: user.id,
