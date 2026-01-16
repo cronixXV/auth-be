@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { loginSchema, registerSchema } from "./auth.schemas";
-import { AuthService } from "./auth.service";
+import { AuthService, refreshTokens } from "./auth.service";
 
 export class AuthController {
   static async register(req: Request, res: Response) {
@@ -88,4 +88,34 @@ export class AuthController {
       });
     }
   }
+}
+
+export async function refresh(req: Request, res: Response) {
+  const token = req.cookies?.refreshToken || req.body?.refreshToken;
+
+  if (!token) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const result = await refreshTokens(token);
+
+  if (!result) {
+    res.clearCookie("refreshToken", {
+      path: "/auth/refresh",
+    });
+
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  res.cookie("refreshToken", result.refreshToken, {
+    httpOnly: true,
+    sameSite: "strict",
+    path: "/auth/refresh",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+
+  return res.json({
+    accessToken: result.accessToken,
+    user: result.user,
+  });
 }

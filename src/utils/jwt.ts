@@ -1,18 +1,24 @@
 import jwt, { SignOptions, Secret } from "jsonwebtoken";
 import ms from "ms";
 
-const accessSecret: Secret = process.env.JWT_ACCESS_SECRET as string;
-const refreshSecret: Secret = process.env.JWT_REFRESH_SECRET as string;
-
-const accessExpiresIn: ms.StringValue =
-  (process.env.JWT_ACCESS_EXPIRES_IN as ms.StringValue) || "15m";
-
-const refreshExpiresIn: ms.StringValue =
-  (process.env.JWT_REFRESH_EXPIRES_IN as ms.StringValue) || "7d";
+const accessSecret = process.env.JWT_ACCESS_SECRET as string;
+const refreshSecret = process.env.JWT_REFRESH_SECRET as string;
 
 if (!accessSecret || !refreshSecret) {
   throw new Error("JWT secrets are not defined in environment variables");
 }
+
+function getExpires(
+  value: string | undefined,
+  fallback: ms.StringValue
+): ms.StringValue {
+  if (!value) return fallback;
+  return value as ms.StringValue;
+}
+
+const accessExpiresIn = getExpires(process.env.JWT_ACCESS_EXPIRES_IN, "15m");
+
+const refreshExpiresIn = getExpires(process.env.JWT_REFRESH_EXPIRES_IN, "7d");
 
 export interface IJwtPayload {
   userId: number;
@@ -50,4 +56,20 @@ export function verifyAccessToken(token: string): IJwtPayload {
 
 export function verifyRefreshToken(token: string): IJwtPayload {
   return verifyToken<IJwtPayload>(token, refreshSecret);
+}
+
+export function safeVerifyToken<T>(token: string, secret: Secret): T | null {
+  try {
+    return jwt.verify(token, secret) as T;
+  } catch {
+    return null;
+  }
+}
+
+export function safeVerifyAccessToken(token: string): IJwtPayload | null {
+  return safeVerifyToken<IJwtPayload>(token, accessSecret);
+}
+
+export function safeVerifyRefreshToken(token: string): IJwtPayload | null {
+  return safeVerifyToken<IJwtPayload>(token, refreshSecret);
 }

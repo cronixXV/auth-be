@@ -1,6 +1,10 @@
 import { User } from "../../models/user";
 import { hashPassword, comparePassword } from "../../utils/hash";
-import { signAccessToken, signRefreshToken } from "../../utils/jwt";
+import {
+  signAccessToken,
+  signRefreshToken,
+  verifyRefreshToken,
+} from "../../utils/jwt";
 import { RegisterDto, LoginDto } from "./auth.schemas";
 
 export class AuthService {
@@ -39,7 +43,6 @@ export class AuthService {
     };
   }
 
-  // ✅ ДОБАВЛЯЕМ СЮДА
   static async login(dto: LoginDto) {
     const user = await User.findOne({
       where: { email: dto.email },
@@ -69,5 +72,43 @@ export class AuthService {
       accessToken,
       refreshToken,
     };
+  }
+}
+
+export async function refreshTokens(refreshToken: string) {
+  try {
+    const payload = verifyRefreshToken(refreshToken);
+
+    const user = await User.findByPk(payload.userId);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    if (user.tokenVersion !== payload.tokenVersion) {
+      throw new Error("Token version mismatch");
+    }
+
+    const newPayload = {
+      userId: user.id,
+      role: user.role,
+      tokenVersion: user.tokenVersion,
+    };
+
+    const accessToken = signAccessToken(newPayload);
+    const newRefreshToken = signRefreshToken(newPayload);
+
+    return {
+      accessToken,
+      refreshToken: newRefreshToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+      },
+    };
+  } catch {
+    return null;
   }
 }
