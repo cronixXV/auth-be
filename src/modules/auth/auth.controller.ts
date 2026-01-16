@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { loginSchema, registerSchema } from "./auth.schemas";
 import { AuthService, refreshTokens } from "./auth.service";
+import * as authService from "./auth.service";
 
 export class AuthController {
   static async register(req: Request, res: Response) {
@@ -15,7 +16,7 @@ export class AuthController {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
-        path: "/auth/refresh",
+        path: "/",
         maxAge: 1000 * 60 * 60 * 24 * 7,
       });
 
@@ -59,7 +60,7 @@ export class AuthController {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
-        path: "/auth/refresh",
+        path: "/",
         maxAge: 1000 * 60 * 60 * 24 * 7,
       });
 
@@ -101,7 +102,7 @@ export async function refresh(req: Request, res: Response) {
 
   if (!result) {
     res.clearCookie("refreshToken", {
-      path: "/auth/refresh",
+      path: "/",
     });
 
     return res.status(401).json({ message: "Unauthorized" });
@@ -110,7 +111,7 @@ export async function refresh(req: Request, res: Response) {
   res.cookie("refreshToken", result.refreshToken, {
     httpOnly: true,
     sameSite: "strict",
-    path: "/auth/refresh",
+    path: "/",
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 
@@ -118,4 +119,26 @@ export async function refresh(req: Request, res: Response) {
     accessToken: result.accessToken,
     user: result.user,
   });
+}
+
+export async function logout(req: Request, res: Response) {
+  try {
+    const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
+
+    if (refreshToken) {
+      await authService.logout(refreshToken);
+    }
+
+    res.clearCookie("refreshToken", {
+      path: "/",
+    });
+
+    return res.json({ message: "Logged out successfully" });
+  } catch {
+    res.clearCookie("refreshToken", {
+      path: "/",
+    });
+
+    return res.json({ message: "Logged out successfully" });
+  }
 }
