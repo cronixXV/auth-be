@@ -16,7 +16,7 @@ export class AuthController {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
-        path: "/auth/refresh",
+        path: "/",
         maxAge: 1000 * 60 * 60 * 24 * 7,
       });
 
@@ -60,7 +60,7 @@ export class AuthController {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
-        path: "/auth/refresh",
+        path: "/",
         maxAge: 1000 * 60 * 60 * 24 * 7,
       });
 
@@ -102,7 +102,7 @@ export async function refresh(req: Request, res: Response) {
 
   if (!result) {
     res.clearCookie("refreshToken", {
-      path: "/auth/refresh",
+      path: "/",
     });
 
     return res.status(401).json({ message: "Unauthorized" });
@@ -111,7 +111,7 @@ export async function refresh(req: Request, res: Response) {
   res.cookie("refreshToken", result.refreshToken, {
     httpOnly: true,
     sameSite: "strict",
-    path: "/auth/refresh",
+    path: "/",
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 
@@ -130,13 +130,13 @@ export async function logout(req: Request, res: Response) {
     }
 
     res.clearCookie("refreshToken", {
-      path: "/auth/refresh",
+      path: "/",
     });
 
     return res.json({ message: "Logged out successfully" });
   } catch {
     res.clearCookie("refreshToken", {
-      path: "/auth/refresh",
+      path: "/",
     });
 
     return res.json({ message: "Logged out successfully" });
