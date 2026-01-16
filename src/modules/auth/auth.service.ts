@@ -112,3 +112,15 @@ export async function refreshTokens(refreshToken: string) {
     return null;
   }
 }
+
+export async function logout(refreshToken: string): Promise<void> {
+  const payload = verifyRefreshToken(refreshToken);
+
+  const user = await User.findByPk(payload.userId);
+  if (!user) {
+    return;
+  }
+
+  user.tokenVersion += 1;
+  await user.save();
+}

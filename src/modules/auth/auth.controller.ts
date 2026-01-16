@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { loginSchema, registerSchema } from "./auth.schemas";
 import { AuthService, refreshTokens } from "./auth.service";
+import * as authService from "./auth.service";
 
 export class AuthController {
   static async register(req: Request, res: Response) {
@@ -118,4 +119,26 @@ export async function refresh(req: Request, res: Response) {
     accessToken: result.accessToken,
     user: result.user,
   });
+}
+
+export async function logout(req: Request, res: Response) {
+  try {
+    const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
+
+    if (refreshToken) {
+      await authService.logout(refreshToken);
+    }
+
+    res.clearCookie("refreshToken", {
+      path: "/auth/refresh",
+    });
+
+    return res.json({ message: "Logged out successfully" });
+  } catch {
+    res.clearCookie("refreshToken", {
+      path: "/auth/refresh",
+    });
+
+    return res.json({ message: "Logged out successfully" });
+  }
 }
