@@ -2,11 +2,13 @@ import { app } from "./app";
 import { sequelize } from "./config/data-base";
 import cookieParser from "cookie-parser";
 import authRoutes from "./modules/auth/auth.routes";
+import profileRoutes from "./modules/profile/profile.routes";
 
 const PORT = Number(process.env.PORT) || 3000;
 
 app.use(cookieParser());
 app.use("/auth", authRoutes);
+app.use("/profile", profileRoutes);
 
 async function connectWithRetry(retries = 10, delayMs = 3000) {
   for (let i = 1; i <= retries; i++) {
