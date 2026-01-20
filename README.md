@@ -156,7 +156,7 @@ roleGuard(["ADMIN"]);
 
 ### Получить профиль пользователя
 
-`GET /user/profile`
+`GET /profile`
 
 - Требует валидный accessToken
 - Использует `req.user.userId`
