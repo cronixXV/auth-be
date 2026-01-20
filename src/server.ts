@@ -3,12 +3,16 @@ import { sequelize } from "./config/data-base";
 import cookieParser from "cookie-parser";
 import authRoutes from "./modules/auth/auth.routes";
 import profileRoutes from "./modules/profile/profile.routes";
+import adminRoutes from "./modules/admin/admin.routes";
+import userRoutes from "./modules/user/user.routes";
 
 const PORT = Number(process.env.PORT) || 3000;
 
 app.use(cookieParser());
 app.use("/auth", authRoutes);
 app.use("/profile", profileRoutes);
+app.use(adminRoutes);
+app.use("/user", userRoutes);
 
 async function connectWithRetry(retries = 10, delayMs = 3000) {
   for (let i = 1; i <= retries; i++) {
